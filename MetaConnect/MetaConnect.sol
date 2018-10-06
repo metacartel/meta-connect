@@ -4,18 +4,18 @@ contract MetaConnect {
 
   constructor() public { }
 
-  function getHash1(bytes32 handle1) public view returns(bytes32){
+  function getHash1(bytes32 handle1, uint256 timestamp) public view returns(bytes32){
     return keccak256(abi.encodePacked(address(this),handle1));
   }
 
-  function getHash2(bytes32 handle1, bytes sig1, bytes32 handle2) public view returns(bytes32){
+  function getHash2(bytes32 handle1, uint256 timestamp, bytes sig1, bytes32 handle2) public view returns(bytes32){
     return keccak256(abi.encodePacked(address(this),handle1,sig1,handle2));
   }
 
-  function metaConnect(bytes32 handle1, bytes32 handle2, bytes sig1, bytes sig2) public {
+  function metaConnect(bytes32 handle1, uint256 timestamp, bytes32 handle2, bytes sig1, bytes sig2) public {
 
-      bytes32 _hash1 = getHash1(handle1);
-      bytes32 _hash2 = getHash2(handle1,sig1,handle2);
+      bytes32 _hash1 = getHash1(handle1,timestamp);
+      bytes32 _hash2 = getHash2(handle1,timestamp,sig1,handle2);
 
       address from;
       address to;

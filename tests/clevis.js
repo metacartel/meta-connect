@@ -131,23 +131,153 @@ module.exports = {
     describe('#transfer() ', function() {
       it('should give metamask account some ether or tokens to test', async function() {
         this.timeout(600000)
-        let result = await clevis("sendTo","0.1","0","0x2a906694D15Df38F59e76ED3a5735f8AAbccE9cb")///<<<-------- change this to your metamask accounts
+        let result = await clevis("sendTo","0.1","0","0x2a906694D15Df38F59e76ED3a5735f8AAbccE9cb")
         printTxResult(result)
-        result = await clevis("sendTo","0.1","0","0x9319bbb4e2652411be15bb74f339b7f6218b2508")///<<<-------- change this to your metamask accounts
+        result = await clevis("sendTo","0.1","0","0x5f19cefc9c9d1bc63f9e4d4780493ff5577d238b")
         printTxResult(result)
+
         //here is an example of running a funtion from within this object:
         //module.exports.mintTo("Greens",0,"0x2a906694d15df38f59e76ed3a5735f8aabcce9cb",20)
         //view more examples here: https://github.com/austintgriffith/galleass/blob/master/tests/galleass.js
       });
     });
   },
-  
 
   ////----------------------------------------------------------------------------///////////////////
 
 
-  ////    ADD YOUR TESTS HERE <<<<<<<<--------------------------------
+  addBouncer:(accountIndex,bouncerAccountIndex)=>{
+    describe('#addBouncer', function() {
+      it('should add account with index bouncerAccountIndex as a bouncer', async function() {
+        this.timeout(600000)
 
+        const accounts = await clevis("accounts")
+
+        const result = await clevis("contract","addBouncer","BouncerProxy",accountIndex,accounts[bouncerAccountIndex])
+        printTxResult(result)
+      });
+    });
+  },
+  fwd:(accountIndexSender,accountIndexSigner)=>{
+    describe('#fwd', function() {
+      it('should build meta transaction into data, sign it as accountIndexSigner and send it as accountIndexSender ', async function() {
+        this.timeout(600000)
+
+        const accounts = await clevis("accounts")
+
+        let testAbi = localContractAbi("Example")
+        let testAddress = localContractAddress("Example")
+        var data = (new web3.eth.Contract(testAbi,testAddress)).methods.addAmount(5).encodeABI()
+        console.log("DATA:",data)
+        //const result = await clevis("contract","forward","TEst",accountIndex,localContractAddress("Example"),"0",data)
+        //printTxResult(result)
+
+        const nonce = await clevis("contract","nonce","BouncerProxy",accounts[accountIndexSigner])
+
+        console.log("Current nonce for "+accounts[accountIndexSigner]+" is ",nonce)
+
+        const { soliditySha3 } = require('web3-utils');
+
+        const rewardAddress = "0x0000000000000000000000000000000000000000"
+
+        const reqardAmount = 0
+
+        //keccak256(abi.encodePacked(address(this), signer, destination, value, data, nonce[signer])),
+        const parts = [
+          localContractAddress("BouncerProxy"),
+          accounts[accountIndexSigner],
+          localContractAddress("Example"),
+          web3.utils.toTwosComplement(0),
+          data,
+          rewardAddress,
+          web3.utils.toTwosComplement(reqardAmount),
+          web3.utils.toTwosComplement(nonce),
+        ]
+        console.log("PARTS",parts)
+        const hashOfMessage = soliditySha3(...parts);
+
+        const message = hashOfMessage
+
+        let sig = await web3.eth.sign(message, accounts[accountIndexSigner])
+
+        console.log("message:"+message+" sig:",sig)
+
+        //function forward(bytes sig, address signer, address destination, uint value, bytes data) public {
+        const result = await clevis("contract","forward","BouncerProxy",accountIndexSender,sig,accounts[accountIndexSigner],localContractAddress("Example"),"0",data,rewardAddress,reqardAmount)
+        printTxResult(result)
+      });
+    });
+  },
+  fwdAndPaySomeToken:(accountIndexSender,accountIndexSigner)=>{
+    describe('#fwdAndPaySomeToken', function() {
+      it('should build meta transaction into data, sign it as accountIndexSigner and send it as accountIndexSender ', async function() {
+        this.timeout(600000)
+
+        const accounts = await clevis("accounts")
+
+        let testAbi = localContractAbi("Example")
+        let testAddress = localContractAddress("Example")
+        var data = (new web3.eth.Contract(testAbi,testAddress)).methods.addAmount(5).encodeABI()
+        console.log("DATA:",data)
+
+        const nonce = await clevis("contract","nonce","BouncerProxy",accounts[accountIndexSigner])
+
+        console.log("Current nonce for "+accounts[accountIndexSigner]+" is ",nonce)
+
+        const { soliditySha3 } = require('web3-utils');
+
+        const rewardAddress = localContractAddress("SomeToken")
+
+        const rewardAmount = 9
+
+        //keccak256(abi.encodePacked(address(this), signer, destination, value, data, nonce[signer])),
+        const parts = [
+          localContractAddress("BouncerProxy"),
+          accounts[accountIndexSigner],
+          localContractAddress("Example"),
+          web3.utils.toTwosComplement(0),
+          data,
+          rewardAddress,
+          web3.utils.toTwosComplement(rewardAmount),
+          web3.utils.toTwosComplement(nonce),
+        ]
+        console.log("PARTS",parts)
+        const hashOfMessage = soliditySha3(...parts);
+
+        const message = hashOfMessage
+
+        let sig = await web3.eth.sign(message, accounts[accountIndexSigner])
+
+        console.log("message:"+message+" sig:",sig)
+
+        //function forward(bytes sig, address signer, address destination, uint value, bytes data) public {
+        const result = await clevis("contract","forward","BouncerProxy",accountIndexSender,sig,accounts[accountIndexSigner],localContractAddress("Example"),"0",data,rewardAddress,rewardAmount)
+        printTxResult(result)
+      });
+    });
+  },
+
+
+  mintSomeToken:(accountIndex,toAccountIndex,amount)=>{
+    describe('#mintSomeToken', function() {
+      it('should mint SomeToken to toAccountIndex', async function() {
+        this.timeout(600000)
+
+        const accounts = await clevis("accounts")
+        const result = await clevis("contract","Mint","SomeToken",accountIndex,accounts[toAccountIndex],amount)
+        printTxResult(result)
+      });
+    });
+  },
+  approveBouncerProxy:(accountIndex,amount)=>{
+    describe('#approveBouncerProxy', function() {
+      it('should approve BouncerProxy to transfer SomeToken', async function() {
+        this.timeout(600000)
+        const result = await clevis("contract","approve","SomeToken",accountIndex,localContractAddress("BouncerProxy"),amount)
+        printTxResult(result)
+      });
+    });
+  },
 
   ////----------------------------------------------------------------------------///////////////////
 
@@ -204,9 +334,6 @@ checkContractDeployment = async (contract)=>{
   return address
 }
 
-
-
-//example helper function
 /*
 makeSureContractHasTokens = async (contract,contractAddress,token)=>{
   const TokenBalance = await clevis("contract","balanceOf",token,contractAddress)

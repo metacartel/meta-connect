@@ -1,10 +1,10 @@
 
 body {
   font-family: sans-serif;
-  color:#888888;
+  color:#000000;
   font-size:28px;
   font-weight:bold;
-  background-color: #313131;
+  background-color: #ffffff;
 }
 a {
   color:#aaaaaa;
@@ -13,4 +13,29 @@ a {
 a:visited {
   color:#999999;
   text-decoration: none;
+}
+
+.col {
+  text-align: center;
+  padding: 10px;
+  height: 100%;
+}
+
+
+.button{
+  padding:10px;
+  margin:10px;
+  border:1px solid #eeeeee;
+  background-color:#e6e6e6;
+  width:200px;
+  text-align:center;
+  cursor:pointer;
+}
+
+.titleCenter {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
