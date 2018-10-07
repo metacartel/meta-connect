@@ -2,14 +2,16 @@ pragma solidity ^0.4.24;
 
 contract MetaConnect {
 
+  bytes32 public purpose = "ETHSF";
+
   constructor() public { }
 
   function getHash1(bytes32 handle1, uint256 timestamp) public view returns(bytes32){
-    return keccak256(abi.encodePacked(address(this),handle1));
+    return keccak256(abi.encodePacked(address(this),handle1,timestamp));
   }
 
   function getHash2(bytes32 handle1, uint256 timestamp, bytes sig1, bytes32 handle2) public view returns(bytes32){
-    return keccak256(abi.encodePacked(address(this),handle1,sig1,handle2));
+    return keccak256(abi.encodePacked(address(this),handle1,timestamp,sig1,handle2));
   }
 
   function metaConnect(bytes32 handle1, uint256 timestamp, bytes32 handle2, bytes sig1, bytes sig2) public {
@@ -61,7 +63,7 @@ contract MetaConnect {
         revert("MetaConnect::metaConnect Incorrect Version 2");
       } else {
         // solium-disable-next-line arg-overflow
-        from = ecrecover(keccak256(
+        to = ecrecover(keccak256(
           abi.encodePacked("\x19Ethereum Signed Message:\n32", _hash2)
         ), v, r, s);
       }
